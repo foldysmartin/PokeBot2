@@ -1,3 +1,4 @@
+from stable_baselines3 import PPO
 from pokebot_env import (
     PokeBotEnv,
 )
@@ -17,16 +18,16 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 
-#drive = "drive/MyDrive/Pokemon/"
+drive = "/content/drive/MyDrive/Pokemon/"
 goal = "oaks_parcel"
-session_path = "Sessions/"
-tensorboard_path = "Tensorboard/"
-ep_length = 40
+session_path = "/Sessions/"
+tensorboard_path = "/Tensorboard/"
+ep_length = 1000
 
 
 def _create_env():
     def func():
-        return Monitor(PokeBotEnv(False, step_limit=ep_length))
+        return Monitor(PokeBotEnv(True, step_limit=ep_length))
 
     return func
 
@@ -59,8 +60,9 @@ def train():
         model.rollout_buffer.n_envs = 1
         model.rollout_buffer.reset()
     else:
-        model = RecurrentPPO(
-            "MultiInputLstmPolicy",
+        model = PPO(
+            "MultiInputPolicy",
+            # "MultiInputLstmPolicy",
             env,
             verbose=1,
             n_steps=ep_length,
@@ -79,20 +81,5 @@ def train():
             # progress_bar=True,
         )
 
-        model.save(f"model/{goal}")
-        deterministic_rewards, deterministic_lengths = evaluate_policy(
-            model,
-            model.get_env(),
-            n_eval_episodes=1,
-            deterministic=False,
-            return_episode_rewards=True,
-        )
-        episode_rewards, episode_lengths = evaluate_policy(
-            model,
-            model.get_env(),
-            n_eval_episodes=10,
-            deterministic=False,
-            return_episode_rewards=True,
-        )
+        model.save(f"{drive}/model/{goal}")
 
-train()
