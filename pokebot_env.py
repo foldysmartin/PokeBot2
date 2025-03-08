@@ -27,7 +27,7 @@ class PokeBotEnv(Env):
             "visited_mask": spaces.Box(
                  low=0, high=1, shape=(100,100,100), dtype=np.uint8
             ),
-            "events": spaces.MultiDiscrete(len(Events)),
+            "events": spaces.MultiDiscrete([2 for _ in Events]),
         }
         self.observation_space = spaces.Dict(obs_dict)
         self.action_space = ACTION_SPACE
