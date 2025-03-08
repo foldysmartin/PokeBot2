@@ -17,6 +17,7 @@ class Events(Enum):
 class PokeBotEnv(Env):
 
     def __init__(self, headless=True, step_limit=1000):
+        print("Starting")
         self.headless = headless
         self.screen_output_shape = (144, 160, 1)
         self.step_limit = step_limit
