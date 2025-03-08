@@ -27,7 +27,7 @@ class PokeBotEnv(Env):
             "visited_mask": spaces.Box(
                  low=0, high=1, shape=(100,100,100), dtype=np.uint8
             ),
-            "events": spaces.MultiBinary(len(Events)),
+            "events": spaces.MultiDiscrete(len(Events)),
         }
         self.observation_space = spaces.Dict(obs_dict)
         self.action_space = ACTION_SPACE
@@ -46,7 +46,7 @@ class PokeBotEnv(Env):
         }
 
     def _completed_events(self):
-        return np.array([self.read_m(event.value[0]) for event in Events])
+        return np.array([self.event_completed(event) for event in Events])
         
 
     def reset(self, seed=None):
