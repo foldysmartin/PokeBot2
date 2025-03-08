@@ -152,4 +152,6 @@ class PokeBotEnv(Env):
 
         with open(directory+'statistics.txt', 'a') as f:
             # Write statistics to file as a new line comma separated values only
-            f.write(','.join(map(str, final_stats.values())) + '\n')
+            text = ','.join(map(str, final_stats.values())) + '\n'
+            print(f"Finished with {text}")
+            f.write(text)

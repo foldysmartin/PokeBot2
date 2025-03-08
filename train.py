@@ -22,7 +22,7 @@ drive = "/content/drive/MyDrive/Pokemon/"
 goal = "oaks_parcel"
 session_path = "/Sessions/"
 tensorboard_path = "/Tensorboard/"
-ep_length = 1000
+ep_length = 3200
 
 
 def _create_env():
@@ -40,15 +40,9 @@ def train():
     sess_path = Path(f"{session_path}/{goal}")
     environment_count = 1
     env = DummyVecEnv(_environments(environment_count))
-    checkpoint_callback = CheckpointCallback(
-        save_freq=ep_length * 10,
-        save_path=sess_path,
-        save_replay_buffer=True,
-        save_vecnormalize=True,
-        name_prefix="train",
-    )
+    
 
-    batch_size = ep_length // 10
+    nsteps = ep_length // 64
     file_name = f"{session_path}/oaks_parcel/train_50000_steps"
 
     if exists(file_name + ".zip"):
@@ -65,8 +59,8 @@ def train():
             # "MultiInputLstmPolicy",
             env,
             verbose=1,
-            n_steps=ep_length,
-            batch_size=ep_length,
+            n_steps=nsteps,
+            batch_size=nsteps,
             n_epochs=1,
             tensorboard_log=tensorboard_path,
             gamma=0.99,
@@ -75,7 +69,6 @@ def train():
     while True:
         model.learn(
             total_timesteps=ep_length * 100,
-            callback=checkpoint_callback,
             tb_log_name=f"{goal}",
             reset_num_timesteps=True,
             # progress_bar=True,
