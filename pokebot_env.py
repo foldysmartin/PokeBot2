@@ -136,7 +136,7 @@ class PokeBotEnv(Env):
         os.remove(directory+'states/visited.npy')
     
     def event_completed(self, event: Events) -> bool:
-        return bin(256 + self.pyboy.memory[event[0]])[-event[1] - 1] == "1"
+        return bin(256 + self.pyboy.memory[event.value[0]])[-event.value[1] - 1] == "1"
 
     def intiate_statistics(self):
         self.starting_stats = {
