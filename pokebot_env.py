@@ -77,7 +77,9 @@ def clamp(n, enum):
 
 class PokeBotEnv(Env):
 
-    def __init__(self, headless=True, step_limit=1000):
+    def __init__(self, headless=True, step_limit=1000, id=0):
+        print(f"Starting environment with id {id}")
+        self.id = id
         self.run_id = 0
         self.headless = headless
         self.step_limit = step_limit
@@ -358,10 +360,10 @@ class PokeBotEnv(Env):
 
     def log_to_file(self, message):
         os.makedirs(directory + "/logs", exist_ok=True)
-        with open(directory + f"/logs/log-{self.run_id}.txt", "a") as f:
+        with open(directory + f"/logs/log-{self.run_id}-{self.id}.txt", "a") as f:
             f.write(message + "\n")
 
     def log_action(self, action):
         os.makedirs(directory + "/actions", exist_ok=True)
-        with open(directory + f"actions/actions-{self.run_id}.txt", "a") as f:
+        with open(directory + f"actions/actions-{self.run_id}-{self.id}.txt", "a") as f:
             f.write(str(action) + "\n")

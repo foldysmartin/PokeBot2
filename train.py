@@ -13,9 +13,9 @@ import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-
+import os
 from stable_baselines3.common.callbacks import CheckpointCallback
-from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 
 drive = "/content/drive/MyDrive/Pokemon/"
@@ -23,11 +23,11 @@ goal = "oaks_parcel"
 session_path = "/Sessions/"
 tensorboard_path = "/Tensorboard/"
 
-step_limit = 500
+step_limit = 10000
 ep_length = step_limit*10
 
 def _delete_directory(path):
-    import os
+    
     if os.path.exists(path):
 
         import shutil
@@ -36,22 +36,24 @@ def _delete_directory(path):
 _delete_directory("logs")
 _delete_directory("actions")
 
+num_cpus = os.cpu_count()
 
-def _create_env():
+
+def _create_env(id):
     def func():
-        return Monitor(PokeBotEnv(True, step_limit=step_limit))
+        return Monitor(PokeBotEnv(True, step_limit=step_limit, id=id))
 
     return func
 
 
 def _environments(count):
-    return list(map(lambda _: _create_env(), range(count)))
+    return list(map(lambda i: _create_env(i), range(count)))
 
 
 def train():
     sess_path = Path(f"{session_path}/{goal}")
     environment_count = 1
-    env = DummyVecEnv(_environments(environment_count))
+    env = SubprocVecEnv(_environments(num_cpus))
     
 
     nsteps = ep_length
@@ -87,4 +89,5 @@ def train():
 
         model.save(f"{drive}/model/{goal}")
 
-train()
+if __name__ == "__main__":
+    train()

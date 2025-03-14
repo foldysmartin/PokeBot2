@@ -8,6 +8,7 @@ class EventGoal:
 
     def is_completed(self, pyboy):
         if self.completed:
+            print(f"EventGoal {self.event} is completed")
             return True
         
         if self.event.completed(pyboy):
@@ -23,6 +24,7 @@ class MapGoal:
 
     def is_completed(self, pyboy):
         if self.completed:
+            print(f"MapGoal {self.map} is completed")
             return True
         
         if read_m(pyboy, "wCurMap") == self.map.value:
