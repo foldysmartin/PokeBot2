@@ -22,12 +22,24 @@ drive = "/content/drive/MyDrive/Pokemon/"
 goal = "oaks_parcel"
 session_path = "/Sessions/"
 tensorboard_path = "/Tensorboard/"
-ep_length = 3200
+
+step_limit = 500
+ep_length = step_limit*10
+
+def _delete_directory(path):
+    import os
+    if os.path.exists(path):
+
+        import shutil
+        shutil.rmtree(path)
+
+_delete_directory("logs")
+_delete_directory("actions")
 
 
 def _create_env():
     def func():
-        return Monitor(PokeBotEnv(True, step_limit=ep_length))
+        return Monitor(PokeBotEnv(True, step_limit=step_limit))
 
     return func
 
@@ -42,7 +54,7 @@ def train():
     env = DummyVecEnv(_environments(environment_count))
     
 
-    nsteps = ep_length // 64
+    nsteps = ep_length
     file_name = f"{session_path}/oaks_parcel/train_50000_steps"
 
     if exists(file_name + ".zip"):
@@ -62,7 +74,6 @@ def train():
             n_steps=nsteps,
             batch_size=nsteps,
             n_epochs=1,
-            tensorboard_log=tensorboard_path,
             gamma=0.99,
         )
 
@@ -71,8 +82,9 @@ def train():
             total_timesteps=ep_length * 100,
             tb_log_name=f"{goal}",
             reset_num_timesteps=True,
-            # progress_bar=True,
+            progress_bar=False,
         )
 
         model.save(f"{drive}/model/{goal}")
 
+train()
