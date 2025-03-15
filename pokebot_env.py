@@ -86,8 +86,8 @@ class PokeBotEnv(Env):
 
         obs_dict = {
             "map": spaces.Discrete(100),
-            "x": spaces.Box(0, 100, shape=(1,)),
-            "y": spaces.Box(0, 100, shape=(1,)),
+            "x": spaces.Discrete(100),
+            "y": spaces.Discrete(100),
             "direction": spaces.Discrete(4),
             "events": spaces.MultiDiscrete([2 for _ in Events]),
         }
@@ -103,8 +103,8 @@ class PokeBotEnv(Env):
     def _get_obs(self):
         return {
             "map": self.read_m("wCurMap"),
-            "x": np.array([self.read_m("wXCoord")]),
-            "y": np.array([self.read_m("wYCoord")]),
+            "x": self.read_m("wXCoord"),
+            "y": self.read_m("wYCoord"),
             "direction": self.read_m("wSpritePlayerStateData1FacingDirection") // 4,            
             "events": self._completed_events(),
         }
