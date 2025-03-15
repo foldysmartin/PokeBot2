@@ -41,7 +41,7 @@ num_cpus = os.cpu_count()
 
 def _create_env(id):
     def func():
-        return Monitor(PokeBotEnv(True, step_limit=step_limit, id=id))
+        return Monitor(PokeBotEnv(False, step_limit=step_limit, id=id))
 
     return func
 
@@ -77,6 +77,7 @@ def train():
             batch_size=nsteps,
             n_epochs=1,
             gamma=0.99,
+            tensorboard_log=tensorboard_path,
         )
 
     while True:
