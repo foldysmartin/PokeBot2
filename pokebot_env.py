@@ -85,13 +85,10 @@ class PokeBotEnv(Env):
         self.step_limit = step_limit
 
         obs_dict = {
-            "position": spaces.Box(low=0, high=255, shape=(3,), dtype=np.uint8),
+            "map": spaces.Discrete(100),
+            "x": spaces.Box(0, 100, shape=(1,)),
+            "y": spaces.Box(0, 100, shape=(1,)),
             "direction": spaces.Discrete(4),
-            "state": spaces.Discrete(len(DialogState)),
-            "yes_no": spaces.Discrete(len(YesNo)),
-            "menu_position": spaces.Discrete(len(MenuPosition)),
-            "battle_menu_selection": spaces.Discrete(len(BattleMenuSelection)),
-            "battle_move_selection": spaces.Discrete(len(MoveSelection)),
             "events": spaces.MultiDiscrete([2 for _ in Events]),
         }
         self.observation_space = spaces.Dict(obs_dict)
@@ -105,13 +102,10 @@ class PokeBotEnv(Env):
 
     def _get_obs(self):
         return {
-            "position": self.get_location(),
-            "direction": self.read_m("wSpritePlayerStateData1FacingDirection") // 4,
-            "state": self.state.value,
-            "yes_no": self.yes_no.value,
-            "menu_position": self.menu_position.value,
-            "battle_menu_selection": self.battle_menu_selection.value,
-            "battle_move_selection": self.battle_move_selecton.value,
+            "map": self.read_m("wCurMap"),
+            "x": np.array([self.read_m("wXCoord")]),
+            "y": np.array([self.read_m("wYCoord")]),
+            "direction": self.read_m("wSpritePlayerStateData1FacingDirection") // 4,            
             "events": self._completed_events(),
         }
 
@@ -147,7 +141,6 @@ class PokeBotEnv(Env):
             MapGoal(Maps.PALLET_TOWN),
             EventGoal(Events.OAK_APPEARS),
             EventGoal(Events.GET_STARTER),
-            EventGoal(Events.RIVAL_IN_LAB),
         ]
 
         self.current_reward = self._current_reward()
@@ -269,9 +262,9 @@ class PokeBotEnv(Env):
             elif action == "up" or action == "down":
                 self.yes_no = YesNo((self.yes_no.value + 1) % 2)
         elif self.state == DialogState.SKIPPING:
-            if self.read_m("wTextBoxID") == 20:
-                self.state = DialogState.YESNO
-                self.yes_no = YesNo.Yes
+            # if self.read_m("wTextBoxID") == 20:
+            #     self.state = DialogState.YESNO
+            #     self.yes_no = YesNo.Yes
 
             if self.read_m("wTextBoxID") == 13:
                 # In pc skip with b
