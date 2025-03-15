@@ -24,7 +24,7 @@ session_path = "/Sessions/"
 tensorboard_path = "/Tensorboard/"
 
 step_limit = 500
-ep_length = (int)(10000/500)
+ep_length = step_limit*20
 
 def _delete_directory(path):
     
