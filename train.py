@@ -41,7 +41,7 @@ num_cpus = os.cpu_count()
 
 def _create_env(id):
     def func():
-        return Monitor(PokeBotEnv(False, step_limit=step_limit, id=id))
+        return Monitor(PokeBotEnv(True, step_limit=step_limit, id=id))
 
     return func
 
@@ -82,7 +82,7 @@ def train():
 
     while True:
         model.learn(
-            total_timesteps=ep_length * 100,
+            total_timesteps=ep_length * 10,
             tb_log_name=f"{goal}",
             reset_num_timesteps=True,
             progress_bar=False,
