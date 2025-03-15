@@ -330,7 +330,7 @@ class PokeBotEnv(Env):
 
         
 
-        return self._get_obs(), self.step_reward(), terminal, False, {}
+        return self._get_obs(), reward, terminal, False, {}
     
     def get_location(self):
         return np.array([self.read_m("wXCoord"), self.read_m("wYCoord"), self.read_m("wCurMap")])
