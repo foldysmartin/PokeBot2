@@ -77,7 +77,7 @@ def train():
             batch_size=nsteps,
             n_epochs=1,
             gamma=0.99,
-            tensorboard_log=tensorboard_path,
+            #tensorboard_log=tensorboard_path,
         )
 
     while True:
@@ -88,7 +88,7 @@ def train():
             pass
         
         model.learn(
-            total_timesteps=ep_length * 1,
+            total_timesteps=ep_length * 20,
             tb_log_name=f"{goal}",
             reset_num_timesteps=True,
             progress_bar=False,
