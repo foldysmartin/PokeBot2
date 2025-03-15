@@ -24,7 +24,7 @@ session_path = "/Sessions/"
 tensorboard_path = "/Tensorboard/"
 
 step_limit = 10000
-ep_length = step_limit*10
+ep_length = step_limit
 
 def _delete_directory(path):
     
@@ -53,7 +53,7 @@ def _environments(count):
 def train():
     sess_path = Path(f"{session_path}/{goal}")
     environment_count = 1
-    env = SubprocVecEnv(_environments(num_cpus))
+    env = SubprocVecEnv(_environments(environment_count))
     
 
     nsteps = ep_length
