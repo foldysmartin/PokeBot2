@@ -83,13 +83,10 @@ class PokeBotEnv(Env):
         self.run_id = 0
         self.headless = headless
         self.step_limit = step_limit
+        self.screen_output_shape = (144, 160, 1)
 
         obs_dict = {
-            "map": spaces.Discrete(100),
-            "x": spaces.Discrete(100),
-            "y": spaces.Discrete(100),
-            "direction": spaces.Discrete(4),
-            "events": spaces.MultiDiscrete([2 for _ in Events]),
+            "screen": spaces.Box(low=0, high=255, shape=self.screen_output_shape, dtype=np.uint8),
         }
         self.observation_space = spaces.Dict(obs_dict)
         self.action_space = ACTION_SPACE
@@ -101,12 +98,8 @@ class PokeBotEnv(Env):
         self.screen = self.pyboy.screen
 
     def _get_obs(self):
-        return {
-            "map": self.read_m("wCurMap"),
-            "x": self.read_m("wXCoord"),
-            "y": self.read_m("wYCoord"),
-            "direction": self.read_m("wSpritePlayerStateData1FacingDirection") // 4,            
-            "events": self._completed_events(),
+        return {            
+            "screen": np.expand_dims(self.screen.ndarray[:, :, 1], axis=-1),
         }
 
     def _completed_events(self):
