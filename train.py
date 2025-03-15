@@ -81,14 +81,21 @@ def train():
         )
 
     while True:
+        try:
+            directory = os.path.dirname(os.path.abspath(__file__))+"/"
+            os.remove(directory+'states/inprogress.state')
+        except:
+            pass
+        
         model.learn(
-            total_timesteps=ep_length * 10,
+            total_timesteps=ep_length * 1,
             tb_log_name=f"{goal}",
             reset_num_timesteps=True,
             progress_bar=False,
         )
 
         model.save(f"{drive}/model/{goal}")
+
 
 if __name__ == "__main__":
     train()

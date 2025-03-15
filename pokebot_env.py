@@ -125,23 +125,24 @@ class PokeBotEnv(Env):
         self.battle_move_selecton = MoveSelection.MOVE1
         
         # self.positions = []
-        # state_path =  Path(directory + '/states/inprogress.state')
+        state_path =  Path(directory + '/states/inprogress.state')
 
-        # if state_path.exists():
-        #     with open(state_path, 'rb') as f:
-        #         self.pyboy.load_state(f)
-        # else:
-        #     with open(directory+"/states/start.state", 'rb') as f:
-        #         self.pyboy.load_state(f)
-        with open(directory+"/states/start.state", 'rb') as f:
-                 self.pyboy.load_state(f)
+        if state_path.exists():
+            with open(state_path, 'rb') as f:
+                self.pyboy.load_state(f)
+        else:
+            with open(directory+"/states/start.state", 'rb') as f:
+                self.pyboy.load_state(f)
 
-        self.goals = [
-            MapGoal(Maps.RED_DOWNSTAIRS),
-            MapGoal(Maps.PALLET_TOWN),
-            EventGoal(Events.OAK_APPEARS),
-            EventGoal(Events.GET_STARTER),
-        ]
+                # Only set goals if we are starting from the beginning as this will reset the goals completness
+                self.goals = [
+                    MapGoal(Maps.RED_DOWNSTAIRS),
+                    MapGoal(Maps.PALLET_TOWN),
+                    EventGoal(Events.OAK_APPEARS),
+                    EventGoal(Events.GET_STARTER),
+                ]
+
+        
 
         self.current_reward = self._current_reward()
         self.previous_event_count = self._completed_events().sum()
@@ -312,15 +313,18 @@ class PokeBotEnv(Env):
 
         if self.previous_event_count != self._completed_events().sum():
             self.previous_event_count = self._completed_events().sum()
-            print("Event completed")
             if self.previous_event_count == len(Events):
-                #self.delete_state()
+                self.delete_state()
                 print("All events completed")
                 terminal = True   
             # else:                
             #     self.save_state()
         if self.steps >= self.step_limit:
             terminal = True
+
+        reward = self.step_reward()
+        if reward > 0:
+            self.save_state()
 
         return self._get_obs(), self.step_reward(), terminal, False, {}
     
