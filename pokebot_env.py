@@ -10,7 +10,7 @@ from events import Events
 from goals import EventGoal, MapGoal
 from maps import Maps
 
-ACTIONS = ["a", "b", "left", "right", "up", "down", "start", "select"]
+ACTIONS = ["a", "left", "right", "up", "down"]
 ACTION_SPACE = spaces.Discrete(len(ACTIONS))
 
 directory = os.path.dirname(os.path.abspath(__file__))+"/"
