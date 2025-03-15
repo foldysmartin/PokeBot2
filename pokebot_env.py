@@ -114,6 +114,7 @@ class PokeBotEnv(Env):
         
 
     def reset(self, seed=None):
+        print("Resetting environment")
         infos = {}
         self.steps = 0
         self.run_id += 1
@@ -146,6 +147,7 @@ class PokeBotEnv(Env):
 
         self.current_reward = self._current_reward()
         self.previous_event_count = self._completed_events().sum()
+        self.pyboy.tick(tick_length, render=True)
         
         return self._get_obs(), infos
     
@@ -311,6 +313,10 @@ class PokeBotEnv(Env):
         # if position not in self.positions:
         #     self.positions.append(position)
 
+        reward = self.step_reward()
+        if reward > 0:
+            self.save_state()
+
         if self.previous_event_count != self._completed_events().sum():
             self.previous_event_count = self._completed_events().sum()
             if self.previous_event_count == len(Events):
@@ -322,9 +328,7 @@ class PokeBotEnv(Env):
         if self.steps >= self.step_limit:
             terminal = True
 
-        reward = self.step_reward()
-        if reward > 0:
-            self.save_state()
+        
 
         return self._get_obs(), self.step_reward(), terminal, False, {}
     
