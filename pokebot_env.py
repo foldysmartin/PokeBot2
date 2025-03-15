@@ -315,6 +315,7 @@ class PokeBotEnv(Env):
 
         reward = self.step_reward()
         if reward > 0:
+            self.steps = 0
             self.save_state()
 
         if self.previous_event_count != self._completed_events().sum():
