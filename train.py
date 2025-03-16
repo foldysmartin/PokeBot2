@@ -23,8 +23,8 @@ goal = "oaks_parcel"
 session_path = "/Sessions/"
 tensorboard_path = "/Tensorboard/"
 
-step_limit = 50
-ep_length = step_limit*100
+step_limit = 100
+ep_length = 5000
 
 def _delete_directory(path):
     

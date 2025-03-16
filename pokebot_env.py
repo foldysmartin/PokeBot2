@@ -126,6 +126,8 @@ class PokeBotEnv(Env):
         self.battle_move_selecton = MoveSelection.MOVE1
 
         self.goals = [
+                    MapGoal(Maps.PALLET_TOWN),
+                    MapGoal(Maps.RED_DOWNSTAIRS),
                     EventGoal(Events.OAK_APPEARS),
                     EventGoal(Events.GET_STARTER),
                 ]
@@ -148,10 +150,13 @@ class PokeBotEnv(Env):
         self.previous_event_count = self._completed_events().sum()
         self.pyboy.tick(tick_length, render=True)
         
+        print("Reset complete")
         return self._get_obs(), infos
     
     def _current_reward(self):
-        return sum([goal.is_completed(self.pyboy) for goal in self.goals]) + len(self.positions)*0.001
+        # Make it print the number of events completed
+        [goal.is_completed(self.pyboy) for goal in self.goals]
+        return sum([goal.is_completed(self.pyboy) for goal in self.goals if type(goal) is EventGoal]) + len(self.positions)*0.001
     
     def step_reward(self):
         prev_reward = self.current_reward
