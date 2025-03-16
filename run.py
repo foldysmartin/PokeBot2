@@ -1,9 +1,8 @@
 import keyboard
 
 from pokebot_env import PokeBotEnv
-ep_length = 3200
 
-env = PokeBotEnv(False, step_limit=ep_length)
+env = PokeBotEnv(False, step_limit=2)
 env.reset()
 
 actions =[]

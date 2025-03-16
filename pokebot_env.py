@@ -124,8 +124,13 @@ class PokeBotEnv(Env):
         self.menu_position = MenuPosition.POKEMON
         self.battle_menu_selection = BattleMenuSelection.FIGHT
         self.battle_move_selecton = MoveSelection.MOVE1
+
+        self.goals = [
+                    EventGoal(Events.OAK_APPEARS),
+                    EventGoal(Events.GET_STARTER),
+                ]
         
-        # self.positions = []
+        self.positions = []
         state_path =  Path(directory + '/states/inprogress.state')
 
         if state_path.exists():
@@ -135,13 +140,7 @@ class PokeBotEnv(Env):
             with open(directory+"/states/start.state", 'rb') as f:
                 self.pyboy.load_state(f)
 
-                # Only set goals if we are starting from the beginning as this will reset the goals completness
-                self.goals = [
-                    MapGoal(Maps.RED_DOWNSTAIRS),
-                    MapGoal(Maps.PALLET_TOWN),
-                    EventGoal(Events.OAK_APPEARS),
-                    EventGoal(Events.GET_STARTER),
-                ]
+                
 
         
 
@@ -152,15 +151,12 @@ class PokeBotEnv(Env):
         return self._get_obs(), infos
     
     def _current_reward(self):
-        return sum([goal.is_completed(self.pyboy) for goal in self.goals])
+        return sum([goal.is_completed(self.pyboy) for goal in self.goals]) + len(self.positions)*0.001
     
     def step_reward(self):
         prev_reward = self.current_reward
         self.current_reward = self._current_reward()
         reward = self.current_reward - prev_reward
-
-        if reward > 0:
-            print("Goal completed")
         return reward
     
     def dialogue_state(self, action):
@@ -302,21 +298,18 @@ class PokeBotEnv(Env):
 
 
     def step(self, action):
-        
         terminal = False
 
         self.run_action_on_emulator(action)
         self.steps += 1
 
-        # location = self.get_location()
-        # position = Position(location[0], location[1], location[2])
-        # if position not in self.positions:
-        #     self.positions.append(position)
+        position = self.get_location()
+        if position not in self.positions:
+            self.positions.append(position)
 
         reward = self.step_reward()
-        if reward > 0:
+        if reward > 0.0:
             self.steps = 0
-            self.save_state()
 
         if self.previous_event_count != self._completed_events().sum():
             self.previous_event_count = self._completed_events().sum()
@@ -324,17 +317,18 @@ class PokeBotEnv(Env):
                 self.delete_state()
                 print("All events completed")
                 terminal = True   
-            # else:                
-            #     self.save_state()
+            else:                
+                self.save_state()
         if self.steps >= self.step_limit:
             terminal = True
+            print("No new exploration")
 
         
 
         return self._get_obs(), reward, terminal, False, {}
     
     def get_location(self):
-        return np.array([self.read_m("wXCoord"), self.read_m("wYCoord"), self.read_m("wCurMap")])
+        return Position(self.read_m("wXCoord"), self.read_m("wYCoord"), self.read_m("wCurMap"))
 
     
     def read_m(self, addr: str | int) -> int:
@@ -353,8 +347,18 @@ class PokeBotEnv(Env):
         with open(directory+'states/inprogress.state', 'wb') as f:
             self.pyboy.save_state(f)
 
+        with open(directory+'states/inprogress.txt', 'wt') as f:
+            f.write(str(self.positions))
+
     def delete_state(self):
         os.remove(directory+'states/inprogress.state')
+        os.remove(directory+'states/inprogress.txt')
+
+    def load_state(self):
+        with open(directory+'states/inprogress.state', 'rb') as f:
+            self.pyboy.load_state(f)
+        with open(directory+'states/inprogress.txt', 'rt') as f:
+            self.positions = eval(f.read())
     
     def event_completed(self, event: Events) -> bool:
         return bin(256 + self.pyboy.memory[event.value[0]])[-event.value[1] - 1] == "1"
