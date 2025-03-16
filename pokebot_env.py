@@ -141,11 +141,7 @@ class PokeBotEnv(Env):
         else:
             with open(directory+"/states/start.state", 'rb') as f:
                 self.pyboy.load_state(f)
-
                 
-
-        
-
         self.current_reward = self._current_reward()
         self.previous_event_count = self._completed_events().sum()
         self.pyboy.tick(tick_length, render=True)
@@ -156,7 +152,7 @@ class PokeBotEnv(Env):
     def _current_reward(self):
         # Make it print the number of events completed
         [goal.is_completed(self.pyboy) for goal in self.goals]
-        return sum([goal.is_completed(self.pyboy) for goal in self.goals if type(goal) is EventGoal]) + len(self.positions)*0.001
+        return sum([goal.is_completed(self.pyboy) for goal in self.goals if type(goal) is EventGoal])*10 + len(self.positions)*0.1
     
     def step_reward(self):
         prev_reward = self.current_reward
