@@ -95,7 +95,3 @@ def train():
         )
 
         model.save(f"{drive}/model/{goal}")
-
-
-if __name__ == "__main__":
-    train()
