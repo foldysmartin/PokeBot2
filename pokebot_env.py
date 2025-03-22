@@ -117,7 +117,6 @@ class PokeBotEnv(Env):
 
     def reset(self, seed=None):
         print("Resetting environment")
-        self.get_location("Reset")
         infos = {}
         self.steps = 0
         self.run_id += 1
