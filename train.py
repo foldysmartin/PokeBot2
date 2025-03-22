@@ -58,15 +58,10 @@ def train():
 
     nsteps = ep_length
     file_name = f"{session_path}/oaks_parcel/train_50000_steps"
+    model_path = f"{drive}/model/{goal}"
 
-    if exists(file_name + ".zip"):
-        print("\nloading checkpoint")
-        model = RecurrentPPO.load(file_name, env=env, tensorboard_log=tensorboard_path)
-        model.n_steps = ep_length
-        model.n_envs = 1
-        model.rollout_buffer.buffer_size = ep_length
-        model.rollout_buffer.n_envs = 1
-        model.rollout_buffer.reset()
+    if exists(model_path + ".zip"):
+        PPO.load(f"{model_path}.zip")
     else:
         model = PPO(
             "MultiInputPolicy",
