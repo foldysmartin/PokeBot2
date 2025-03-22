@@ -72,7 +72,7 @@ def train():
             batch_size=nsteps,
             n_epochs=1,
             gamma=0.99,
-            tensorboard_log=tensorboard_path,
+            #tensorboard_log=tensorboard_path,
         )
 
     while True:

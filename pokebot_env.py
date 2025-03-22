@@ -101,7 +101,6 @@ class PokeBotEnv(Env):
         self.screen = self.pyboy.screen
 
     def _get_obs(self):
-        self.log_to_file("Getting observation")
         return {
             "map": self.read_m("wCurMap"),
             "x": self.read_m("wXCoord"),
@@ -111,7 +110,6 @@ class PokeBotEnv(Env):
         }
 
     def _completed_events(self):
-        self.log_to_file("Getting completed events")
         return np.array([self.event_completed(event) for event in Events])
         
 
@@ -128,11 +126,14 @@ class PokeBotEnv(Env):
         self.battle_move_selecton = MoveSelection.MOVE1
 
         self.goals = [
-                    MapGoal(Maps.PALLET_TOWN),
-                    MapGoal(Maps.RED_DOWNSTAIRS),
                     EventGoal(Events.OAK_APPEARS),
                     EventGoal(Events.GET_STARTER),
+                    EventGoal(Events.RIVAL_IN_LAB),
+                    EventGoal(Events.GOT_OAKS_PARCEL),
                 ]
+    
+        self.reset_exploration = [EventGoal(Events.OAK_APPEARS), EventGoal(Events.GOT_OAKS_PARCEL)]
+
         
         self.positions = []
         state_path =  Path(directory + '/states/inprogress.state')
@@ -145,6 +146,7 @@ class PokeBotEnv(Env):
                 self.pyboy.load_state(f)
                 
         self.current_reward = self._current_reward()
+        self.reset_counter = self._reset_counter()
         self.previous_event_count = self._completed_events().sum()
         self.pyboy.tick(tick_length, render=True)
         
@@ -152,71 +154,22 @@ class PokeBotEnv(Env):
         return self._get_obs(), infos
     
     def _current_reward(self):
-        self.log_to_file("Getting current reward")
-        # Make it print the number of events completed
-        [goal.is_completed(self.pyboy) for goal in self.goals]
-        return sum([goal.is_completed(self.pyboy) for goal in self.goals if type(goal) is EventGoal])*10 + len(self.positions)*0.1
+        return sum([goal.is_completed(self.pyboy) for goal in self.goals])*10 + len(self.positions)*0.1
+    
+    def _reset_counter(self):
+        return sum([goal.is_completed(self.pyboy) for goal in self.reset_exploration])
     
     def step_reward(self):
-        self.log_to_file("Getting step reward")
         prev_reward = self.current_reward
         self.current_reward = self._current_reward()
         reward = self.current_reward - prev_reward
         return reward
     
-    def dialogue_state(self, action):
-        self.log_to_file("Checking dialogue state")
-        if self.state == DialogState.BATTLE_MENU:
-            if action == "up":
-                if self.battle_menu_selection == BattleMenuSelection.RUN:
-                    self.battle_menu_selection = BattleMenuSelection.POKEMON
-                elif self.battle_menu_selection == BattleMenuSelection.ITEM:
-                    self.battle_menu_selection = BattleMenuSelection.FIGHT
-            elif action == "down":
-                if  self.battle_menu_selection == BattleMenuSelection.FIGHT:
-                    self.battle_menu_selection = BattleMenuSelection.ITEM
-                elif self.battle_menu_selection == BattleMenuSelection.POKEMON:
-                    self.battle_menu_selection = BattleMenuSelection.RUN
-            elif action == "left":
-                if self.battle_menu_selection == BattleMenuSelection.POKEMON:
-                    self.battle_menu_selection = BattleMenuSelection.FIGHT
-                elif self.battle_menu_selection == BattleMenuSelection.RUN:
-                    self.battle_menu_selection = BattleMenuSelection.ITEM
-            elif action == "right":
-                if self.battle_menu_selection == BattleMenuSelection.FIGHT:
-                    self.battle_menu_selection = BattleMenuSelection.POKEMON
-                elif self.battle_menu_selection == BattleMenuSelection.ITEM:
-                    self.battle_menu_selection = BattleMenuSelection.RUN
-            elif action == "a":
-                if self.battle_menu_selection == BattleMenuSelection.FIGHT:
-                    self.state = DialogState.BATTLE_MOVE
-                elif self.battle_menu_selection == BattleMenuSelection.POKEMON:
-                    #go back
-                    self.pyboy.button("b", action_length)
-                    self.pyboy.tick(tick_length, render=True)        
-                elif self.battle_menu_selection == BattleMenuSelection.ITEM:
-                    #go back
-                    self.pyboy.button("b", action_length)
-                    self.pyboy.tick(tick_length, render=True)  
-                elif self.battle_menu_selection == BattleMenuSelection.RUN:
-                    self.state = DialogState.SKIPPING
-        elif self.state == DialogState.BATTLE_MOVE:
-            if action == "up":
-                self.battle_move_selecton = MoveSelection((self.battle_move_selecton.value - 1) % len(MoveSelection))
-            elif action == "down":
-                self.battle_move_selecton = MoveSelection((self.battle_move_selecton.value + 1) % len(MoveSelection))
-            elif action == "a":
-                self.state = DialogState.SKIPPING
-            elif action == "b":
-                self.state = DialogState.BATTLE_MENU
-            
+    def dialogue_state(self, action):           
+        if self.read_m("wIsInBattle") != 0 or self.read_m("wCurOpponent") != 0:
+            action = "a"
+            self.state = DialogState.SKIPPING
 
-        elif self.read_m("wCurOpponent") != 0:
-            if self.read_m("wTextBoxID") == 11:
-                self.state = DialogState.BATTLE_MENU
-            else:
-                action = "a"
-                self.state = DialogState.SKIPPING
         elif self.read_m("vChars1") == 0:
             self.state = DialogState.NO_DIALOG         
             
@@ -285,7 +238,6 @@ class PokeBotEnv(Env):
 
 
     def run_action_on_emulator(self, action):
-        self.log_to_file(f"Running action {action}")
         self.log_action(action)
         self.pyboy.button(ACTIONS[action], action_length)
         self.pyboy.tick(tick_length, render=True)
@@ -306,6 +258,11 @@ class PokeBotEnv(Env):
 
         self.run_action_on_emulator(action)
         self.steps += 1
+
+        if self.reset_counter < self._reset_counter():
+            self.reset_counter = self._reset_counter()
+            self.positions = []
+            print("Resetting exploration")
 
         position = self.get_location()
         if position not in self.positions:
@@ -346,7 +303,6 @@ class PokeBotEnv(Env):
             self.pyboy.memory[addr] = value
     
     def save_state(self):
-        self.log_to_file("Saving state")
         with open(directory+'states/inprogress.state', 'wb') as f:
             self.pyboy.save_state(f)
 
@@ -354,12 +310,10 @@ class PokeBotEnv(Env):
             f.write(str(self.positions))
 
     def delete_state(self):
-        self.log_to_file("Deleting state")
         os.remove(directory+'states/inprogress.state')
         os.remove(directory+'states/inprogress.txt')
 
     def load_state(self):
-        self.log_to_file("Loading state")
         with open(directory+'states/inprogress.state', 'rb') as f:
             self.pyboy.load_state(f)
         with open(directory+'states/inprogress.txt', 'rt') as f:
