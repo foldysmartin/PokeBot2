@@ -61,7 +61,7 @@ def train():
     model_path = f"{drive}/model/{goal}"
 
     if exists(model_path + ".zip"):
-        model = PPO.load(f"{model_path}.zip")
+        model = PPO.load(f"{model_path}.zip", env=env)
     else:
         model = PPO(
             "MultiInputPolicy",
