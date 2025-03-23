@@ -169,6 +169,10 @@ class PokeBotEnv(Env):
         if self.read_m("wIsInBattle") != 0 or self.read_m("wCurOpponent") != 0:
             action = "a"
             self.state = DialogState.SKIPPING
+        elif self.read_m("wJoyIgnore") != 0:
+            action = "b"
+            self.state = DialogState.SKIPPING
+
 
         elif self.read_m("vChars1") == 0:
             self.state = DialogState.NO_DIALOG         
@@ -244,13 +248,6 @@ class PokeBotEnv(Env):
 
         self.dialogue_state(ACTIONS[action])
 
-        # DO NOT DELETE. Some animations require dialog navigation
-        for _ in range(1000):
-            if not self.read_m("wJoyIgnore"):
-                break
-            self.pyboy.button("a", action_length)
-            self.pyboy.tick(tick_length, render=True)
-
 
     def step(self, action):
         self.log_to_file(f"Taking step {self.steps}")
@@ -280,7 +277,7 @@ class PokeBotEnv(Env):
                 self.save_state()
         if self.steps >= self.step_limit:
             terminal = True
-            print("No new exploration")
+            print(f"Location {position}")
 
         
 

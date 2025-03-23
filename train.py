@@ -53,7 +53,7 @@ def _environments(count):
 def train():
     sess_path = Path(f"{session_path}/{goal}")
     environment_count = 1
-    env = SubprocVecEnv(_environments(environment_count))
+    env = DummyVecEnv(_environments(environment_count))
     
 
     nsteps = ep_length
