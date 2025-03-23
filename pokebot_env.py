@@ -246,8 +246,11 @@ class PokeBotEnv(Env):
         self.pyboy.button(ACTIONS[action], action_length)
         self.pyboy.tick(tick_length, render=True)
 
-        self.dialogue_state(ACTIONS[action])
-
+        try:
+            self.dialogue_state(ACTIONS[action])
+        except RecursionError as e:
+            self.pyboy.save_state("error.state")
+            raise e
 
     def step(self, action):
         self.log_to_file(f"Taking step {self.steps}")
