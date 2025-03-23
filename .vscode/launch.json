@@ -9,8 +9,9 @@
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "train.py",
-            "console": "integratedTerminal"
+            "program": "run.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

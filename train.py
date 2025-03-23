@@ -13,73 +13,84 @@ import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-
+import os
 from stable_baselines3.common.callbacks import CheckpointCallback
-from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 
 drive = "/content/drive/MyDrive/Pokemon/"
 goal = "oaks_parcel"
 session_path = "/Sessions/"
 tensorboard_path = "/Tensorboard/"
-ep_length = 1000
+
+step_limit = 5000
+ep_length = 5000
+
+def _delete_directory(path):
+    
+    if os.path.exists(path):
+
+        import shutil
+        shutil.rmtree(path)
+
+_delete_directory("logs")
+_delete_directory("actions")
+
+num_cpus = os.cpu_count()
 
 
-def _create_env():
+def _create_env(id):
     def func():
-        return Monitor(PokeBotEnv(True, step_limit=ep_length))
+        return Monitor(PokeBotEnv(True, step_limit=step_limit, id=id))
 
     return func
 
 
 def _environments(count):
-    return list(map(lambda _: _create_env(), range(count)))
+    return list(map(lambda i: _create_env(i), range(count)))
 
 
 def train():
     sess_path = Path(f"{session_path}/{goal}")
     environment_count = 1
-    env = DummyVecEnv(_environments(environment_count))
-    checkpoint_callback = CheckpointCallback(
-        save_freq=ep_length * 10,
-        save_path=sess_path,
-        save_replay_buffer=True,
-        save_vecnormalize=True,
-        name_prefix="train",
-    )
+    env = SubprocVecEnv(_environments(environment_count))
+    
 
-    batch_size = ep_length // 10
+    nsteps = ep_length
     file_name = f"{session_path}/oaks_parcel/train_50000_steps"
+    model_path = f"{drive}/model/{goal}"
 
-    if exists(file_name + ".zip"):
-        print("\nloading checkpoint")
-        model = RecurrentPPO.load(file_name, env=env, tensorboard_log=tensorboard_path)
-        model.n_steps = ep_length
-        model.n_envs = 1
-        model.rollout_buffer.buffer_size = ep_length
-        model.rollout_buffer.n_envs = 1
-        model.rollout_buffer.reset()
+    if exists(model_path + ".zip"):
+        model = PPO.load(f"{model_path}.zip", env=env)
     else:
         model = PPO(
             "MultiInputPolicy",
             # "MultiInputLstmPolicy",
             env,
             verbose=1,
-            n_steps=ep_length,
-            batch_size=ep_length,
+            n_steps=nsteps,
+            batch_size=nsteps,
             n_epochs=1,
-            tensorboard_log=tensorboard_path,
             gamma=0.99,
+            tensorboard_log=tensorboard_path,
         )
 
     while True:
+        try:
+            directory = os.path.dirname(os.path.abspath(__file__))+"/"
+            os.remove(directory+'states/inprogress.state')
+        except:
+            pass
+        
         model.learn(
-            total_timesteps=ep_length * 100,
-            callback=checkpoint_callback,
+            total_timesteps=ep_length * 20,
             tb_log_name=f"{goal}",
             reset_num_timesteps=True,
-            # progress_bar=True,
+            progress_bar=False,
         )
 
         model.save(f"{drive}/model/{goal}")
 
+
+if __name__ == "__main__":
+    train()
