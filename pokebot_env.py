@@ -249,7 +249,8 @@ class PokeBotEnv(Env):
         try:
             self.dialogue_state(ACTIONS[action])
         except RecursionError as e:
-            self.pyboy.save_state("error.state")
+            with open("error.state", "wb") as f:
+                self.pyboy.save_state(f)
             raise e
 
     def step(self, action):
