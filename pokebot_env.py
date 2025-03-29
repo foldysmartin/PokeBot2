@@ -174,59 +174,40 @@ class PokeBotEnv(Env):
         if self.read_m("wIsInBattle") != 0 or self.read_m("wCurOpponent") != 0:
             action = "a"
             self.state = DialogState.SKIPPING
+            
+            a = self.read_m("wPartyMon1PP")
+            b = self.read_m("wPartyMon2PP")
+            # If no pp left, try to run
+            if self.read_m("wPartyMon1PP") == 0:
+                # Press b 20 times:
+                for i in range(20):
+                    self.pyboy.button("b", action_length)
+                    self.pyboy.tick(tick_length, render=True)
+                
+                self.pyboy.button("down", action_length)
+                self.pyboy.tick(tick_length, render=True)
+                self.pyboy.button("right", action_length)
+                self.pyboy.tick(tick_length, render=True)
+                self.pyboy.button("a", action_length)
+                self.pyboy.tick(tick_length, render=True)
+
+                # Press b 20 times:
+                for i in range(20):
+                    self.pyboy.button("b", action_length)
+                    self.pyboy.tick(tick_length, render=True)
+
         elif self.read_m("wJoyIgnore") != 0:
             action = "b"
             self.state = DialogState.SKIPPING
 
 
         elif self.read_m("vChars1") == 0:
-            self.state = DialogState.NO_DIALOG         
-            
-            # Reset battke menu selection for future battles
-            self.battle_menu_selection = BattleMenuSelection.FIGHT
-            self.battle_move_selecton = MoveSelection.MOVE1
-            
+            self.state = DialogState.NO_DIALOG                     
             # Reset text box id so we can skip dialog in the future
             self.set_m("wTextBoxID", 1)  
-        elif self.state == DialogState.SAVE or self.state == DialogState.OPTIONS or self.state == DialogState.PLAYER:
-            # Skip dialog
-            action = "b"
-            self.state = DialogState.SKIPPING
         elif self.state == DialogState.NO_DIALOG: # This is only called if there is a change from no dialog to dialog
-            if action == "start":
-                self.state = DialogState.MENU
-            else:
-                action = "a"
-                self.state = DialogState.SKIPPING
-        elif self.state == DialogState.MENU:
-            if action == "up":
-                self.menu_position = MenuPosition((self.menu_position.value - 1) % 6)
-            elif action == "down":
-                self.menu_position =  MenuPosition((self.menu_position.value + 1) % 6)
-            elif action == "a":
-                if not self.event_completed(Events.GET_STARTER) and self.menu_position == MenuPosition.POKEMON:
-                    # No pokemon yet so cannot open menu
-                    pass
-                else:
-                    self.state = DialogState(self.menu_position.value + DialogState.MENU.value + 1)
-                    if self.state == DialogState.SAVE or self.state == DialogState.OPTIONS or self.state == DialogState.PLAYER or self.state == DialogState.POKEMON:
-                        # Recursively skip dialog including ignoring pokemon for now
-                        action = "b"
-                        self.state = DialogState.SKIPPING
-        elif self.state == DialogState.ITEM:
-            if action == "b":
-                self.state = DialogState.MENU
-            elif action == "a":
-                # Currently no items
-                self.state = DialogState.MENU
-        elif self.state == DialogState.YESNO:
-            if action == "a":
-                self.state = DialogState.SKIPPING
-                self.yes_no = YesNo.No
-                # Reset text box id so we can skip dialog in the future
-                self.set_m("wTextBoxID", 1)  
-            elif action == "up" or action == "down":
-                self.yes_no = YesNo((self.yes_no.value + 1) % 2)
+            action = "a"
+            self.state = DialogState.SKIPPING        
         elif self.state == DialogState.SKIPPING:
             # if self.read_m("wTextBoxID") == 20:
             #     self.state = DialogState.YESNO
