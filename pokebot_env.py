@@ -165,7 +165,12 @@ class PokeBotEnv(Env):
         reward = self.current_reward - prev_reward
         return reward
     
-    def dialogue_state(self, action):           
+    def dialogue_state(self, action, count=0): 
+        count += 1
+        if count > 100:
+            with open("error.state", "wb") as f:
+                self.pyboy.save_state(f)
+
         if self.read_m("wIsInBattle") != 0 or self.read_m("wCurOpponent") != 0:
             action = "a"
             self.state = DialogState.SKIPPING
@@ -237,7 +242,7 @@ class PokeBotEnv(Env):
             self.pyboy.button(action, action_length)
             self.pyboy.tick(tick_length, render=True)
             
-            self.dialogue_state(action)
+            self.dialogue_state(action, count)
 
 
 
@@ -246,13 +251,8 @@ class PokeBotEnv(Env):
         self.pyboy.button(ACTIONS[action], action_length)
         self.pyboy.tick(tick_length, render=True)
 
-        try:
-            self.dialogue_state(ACTIONS[action])
-        except RecursionError as e:
-            with open("error.state", "wb") as f:
-                self.pyboy.save_state(f)
-            raise e
-
+        self.dialogue_state(ACTIONS[action])
+        
     def step(self, action):
         self.log_to_file(f"Taking step {self.steps}")
         terminal = False
